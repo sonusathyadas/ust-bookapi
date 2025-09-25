@@ -1,6 +1,26 @@
 ## BookWebApi
 
-A small, opinionated .NET 8 Web API that demonstrates a simple Books service backed by Entity Framework Core and SQLite. It exposes REST endpoints to create, read, update, delete, search and page through books. The project follows basic clean architecture practices (Repository pattern, DTOs, DI) suitable for learning and small demos.
+A small, opinionated .NET 8 Web API that demonstrates a simple Books service backed by Entity Framework Core and SQLite. It exposes REST endpoints to create, read, update, delete, search and page through books with JWT authentication. The project follows basic clean architecture practices (Repository pattern, DTOs, DI) suitable for learning and small demos.
+
+## Quick Start Guide
+
+1. **Prerequisites:** .NET 8 SDK installed
+2. **Clone and run:**
+   ```bash
+   git clone <repository-url>
+   cd BookWebApi
+   dotnet run
+   ```
+3. **API will be available at:** 
+   - HTTP: `http://localhost:5000`
+   - HTTPS: `https://localhost:5001` 
+   - Swagger UI: `https://localhost:5001/swagger`
+
+4. **Basic workflow:**
+   - Register: `POST /api/auth/register`
+   - Login: `POST /api/auth/login` (get JWT token)
+   - Use token: Include `Authorization: Bearer <token>` header for book endpoints
+   - Access books: `GET /api/books` with authentication header
 
 ## Project structure
 
@@ -211,6 +231,20 @@ Response shape for `Book` (example):
   "message": "Book not found"
 }
 ```
+
+### HTTP Status Code Reference
+
+| Status Code | Meaning | When It Occurs |
+|-------------|---------|----------------|
+| 200 OK | Success | GET requests that return data |
+| 201 Created | Resource created | POST requests that create new resources |
+| 204 No Content | Success with no body | PUT/DELETE requests that succeed |
+| 400 Bad Request | Invalid request | Missing required fields, invalid parameters |
+| 401 Unauthorized | Authentication required | Missing or invalid JWT token |
+| 403 Forbidden | Access denied | Token expired or insufficient permissions |
+| 404 Not Found | Resource not found | Requested book/user doesn't exist |
+| 409 Conflict | Resource already exists | Username already taken during registration |
+| 500 Internal Server Error | Server error | Unexpected server-side errors |
 
 ## Usage Examples (PowerShell / pwsh)
 
