@@ -11,6 +11,7 @@ namespace BookWebApi.Controllers
     [EnableCors("AllowAllOrigins")]
     [Route("api/[controller]")]
     [ApiController]
+    [Microsoft.AspNetCore.Authorization.Authorize]
     public class BooksController : ControllerBase
     {
         private readonly IBookRepository _bookRepository;

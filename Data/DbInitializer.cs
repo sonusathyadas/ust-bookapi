@@ -28,6 +28,27 @@ namespace BookWebApi.Data
 
             context.Books.AddRange(books);
             context.SaveChanges();
+
+            // Add a default customer for testing (username: testuser, password: Password123!)
+            if (!context.Set<BookWebApi.Models.Customer>().Any())
+            {
+                var password = "Password123!";
+                // simple hash for seeding (not recommended for production)
+                var passwordHash = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password));
+
+                var customer = new BookWebApi.Models.Customer
+                {
+                    Name = "Test User",
+                    Email = "test@example.com",
+                    Mobile = "1234567890",
+                    Address = "Test Address",
+                    UserName = "testuser",
+                    PasswordHash = passwordHash
+                };
+
+                context.Add(customer);
+                context.SaveChanges();
+            }
         }
     }
 }
