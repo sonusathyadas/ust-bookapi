@@ -83,11 +83,13 @@ namespace BookWebApi.Controllers
                 new Claim("id", user.Id.ToString())
             };
 
+            var expiryMinutes = jwtSettings.GetValue<int>("ExpiryMinutes");
+
             var token = new JwtSecurityToken(
                 issuer: issuer,
                 audience: audience,
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(2),
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: credentials
             );
 
