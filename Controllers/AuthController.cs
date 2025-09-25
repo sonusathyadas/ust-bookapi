@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using BookWebApi.DTOs;
 using BookWebApi.Models;
+using System.Linq;
 
 namespace BookWebApi.Controllers
 {
@@ -90,6 +91,71 @@ namespace BookWebApi.Controllers
             return Ok(new { Message = "Password reset successful. Check your email for the temporary password.", TemporaryPassword = tempPassword });
         }
 
+        private const int DEFAULT_PAGE_SIZE = 10;
+
+        /// <summary>
+        /// Returns a paginated list of users along with pagination metadata.
+        /// Sensitive data like passwords are excluded and emails are masked.
+        /// </summary>
+        /// <param name="page">The 1-based page number to return. Must be greater than 0.</param>
+        /// <param name="pageSize">The number of items per page. If not supplied, a default is used.</param>
+        /// <returns>An object containing the page data and pagination numbers (current, previous, next).</returns>
+        [HttpGet("users")]
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        public ActionResult<object> GetUsersPaged([FromQuery] int page = 1, [FromQuery] int pageSize = DEFAULT_PAGE_SIZE)
+        {
+            try
+            {
+                if (page <= 0 || pageSize <= 0)
+                {
+                    return BadRequest("Both 'page' and 'pageSize' must be greater than zero.");
+                }
+
+                var allUsers = _context.Set<Customer>().ToList();
+                
+                var totalCount = allUsers.Count;
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                totalPages = Math.Max(1, totalPages);
+
+                if (page > totalPages)
+                {
+                    return BadRequest($"Requested page '{page}' exceeds total pages '{totalPages}'.");
+                }
+
+                var startIndex = (page - 1) * pageSize;
+                var takeCount = Math.Min(pageSize, Math.Max(0, totalCount - startIndex));
+                var pageUsers = startIndex < totalCount ? allUsers.GetRange(startIndex, takeCount) : new();
+
+                // Map to UserResponseDto and mask emails
+                var userResponseList = pageUsers.Select(user => new UserResponseDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Email = MaskEmail(user.Email),
+                    Mobile = user.Mobile,
+                    Address = user.Address,
+                    UserName = user.UserName
+                }).ToList();
+
+                int? prevPage = page > 1 ? page - 1 : null;
+                int? nextPage = page < totalPages ? page + 1 : null;
+
+                var responsePayload = new
+                {
+                    Data = userResponseList,
+                    CurrentPage = page,
+                    PrevPage = prevPage,
+                    NextPage = nextPage
+                };
+
+                return Ok(responsePayload);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "An error occurred while retrieving paginated users.");
+            }
+        }
+
         private string GenerateJwtToken(Customer user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
@@ -125,6 +191,29 @@ namespace BookWebApi.Controllers
             var random = new Random();
             return new string(Enumerable.Repeat(chars, 8)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        private string? MaskEmail(string? email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return email;
+
+            var atIndex = email.IndexOf('@');
+            if (atIndex <= 1)
+                return email; // Can't mask effectively
+
+            var localPart = email.Substring(0, atIndex);
+            var domainPart = email.Substring(atIndex);
+
+            // Keep first character and last character before @, mask the middle
+            if (localPart.Length <= 2)
+            {
+                return $"{localPart[0]}*{domainPart}";
+            }
+            
+            var maskedLength = localPart.Length - 2;
+            var masked = new string('*', maskedLength);
+            return $"{localPart[0]}{masked}{localPart[localPart.Length - 1]}{domainPart}";
         }
     }
 }

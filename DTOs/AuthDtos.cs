@@ -23,4 +23,14 @@ namespace BookWebApi.DTOs
     {
         public string Email { get; set; }
     }
+
+    public class UserResponseDto
+    {
+        public int Id { get; set; }
+        public string? Name { get; set; }
+        public string? Email { get; set; } // This will be masked
+        public string? Mobile { get; set; }
+        public string? Address { get; set; }
+        public string? UserName { get; set; }
+    }
 }
