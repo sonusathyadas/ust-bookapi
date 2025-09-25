@@ -10,6 +10,7 @@ namespace BookWebApi.Data
         }
 
         public DbSet<Book> Books { get; set; }
+    public DbSet<BookWebApi.Models.Customer> Customers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
