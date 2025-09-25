@@ -270,6 +270,10 @@ CConvertLog*.txt
 *.sqlite
 *.sqlite3
 
+# SQLite WAL files
+*.db-wal
+*.db-shm
+
 # Business Intelligence projects
 *.rdl.data
 *.bim.layout
