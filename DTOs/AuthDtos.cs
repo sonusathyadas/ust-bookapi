@@ -18,4 +18,9 @@ namespace BookWebApi.DTOs
     {
         public string Token { get; set; }
     }
+
+    public class ForgotPasswordDto
+    {
+        public string Email { get; set; }
+    }
 }

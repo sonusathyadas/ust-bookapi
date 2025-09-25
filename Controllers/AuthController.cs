@@ -67,6 +67,29 @@ namespace BookWebApi.Controllers
             return Ok(new AuthResponseDto { Token = token });
         }
 
+        [HttpPost("forgot-password")]
+        public IActionResult ForgotPassword(ForgotPasswordDto forgotPassword)
+        {
+            if (string.IsNullOrWhiteSpace(forgotPassword.Email))
+                return BadRequest("Email is required.");
+
+            var user = _context.Set<Customer>().FirstOrDefault(c => c.Email == forgotPassword.Email);
+            if (user == null)
+                return NotFound("User with the provided email not found.");
+
+            // Generate a temporary password
+            var tempPassword = GenerateTemporaryPassword();
+            var tempPasswordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes(tempPassword));
+
+            // Update user's password
+            user.PasswordHash = tempPasswordHash;
+            _context.SaveChanges();
+
+            // In a real application, you would send this temporary password via email
+            // For now, we'll return it in the response (not recommended for production)
+            return Ok(new { Message = "Password reset successful. Check your email for the temporary password.", TemporaryPassword = tempPassword });
+        }
+
         private string GenerateJwtToken(Customer user)
         {
             var jwtSettings = _configuration.GetSection("JwtSettings");
@@ -94,6 +117,14 @@ namespace BookWebApi.Controllers
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private string GenerateTemporaryPassword()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 8)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }
